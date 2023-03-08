@@ -1,4 +1,4 @@
-byte receivedByte = 0;
+char receivedByte = 0;
 
 void setup() {
 pinMode(LED_BUILTIN, OUTPUT);
@@ -10,11 +10,11 @@ if (Serial.available() > 0)
 {
   receivedByte = Serial.read();
   Serial.println(receivedByte);
-  if (receivedByte == 77 || receivedByte == 109)
+  if (receivedByte == 'M' || receivedByte == 'm')
   {
     digitalWrite(LED_BUILTIN, LOW);
   }
-  else if (receivedByte == 98 || receivedByte == 66)
+  else if (receivedByte == 'B' || receivedByte == 'b')
   {
     digitalWrite(LED_BUILTIN, HIGH); 
   }
