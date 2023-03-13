@@ -10,12 +10,12 @@ void loop() {
   { 
     input = Serial.read(); // read input
     if (input == 'd' or input == 'D') 
-    { // if 'k'
+    { // if 'd'
       digitalWrite(LED_BUILTIN, LOW); // LED on
       Serial.println(input);
     }
     else if (input == 'o'or input== 'O') 
-    { // if 'm'
+    { // if 'o'
       digitalWrite(LED_BUILTIN, HIGH); // LED off
       Serial.println(input);
     }
