@@ -36,7 +36,13 @@ else if (t > 27 && h < 40) {
 else if (t < 18 && h > 60) {
   Serial.println("Heater + Fan");
 }
-else {
-  Serial.println("Conditions are optimal");
+else if (h>60) {
+  Serial.println("FAN");
+}
+else if (t>26){
+  Serial.println("AC");
+}
+else if (t<17){
+  Serial.println("Heater");
 }
 }
