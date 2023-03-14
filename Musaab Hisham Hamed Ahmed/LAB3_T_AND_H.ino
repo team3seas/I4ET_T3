@@ -45,4 +45,7 @@ else if (t>26){
 else if (t<17){
   Serial.println("Heater");
 }
+else{
+  Serial.println("Conditions are Optimal");
+}
 }
