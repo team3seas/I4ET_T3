@@ -1,0 +1,229 @@
+//temperature sensor
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define ONE_WIRE_BUS D3
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+//---------------------------------------------------
+//ultrasound
+#include <NewPingESP8266.h>
+#define TRIGGER_PIN D6
+#define ECHO_PIN D5
+#define MAX_DISTANCE 200
+NewPingESP8266 sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+//----------------------------------------------------
+//CO2
+int CO2_pin = A0;
+float CO2_value;
+//---------------------------------------------------
+//humidity sensor
+#include "DHT.h"
+#define DHTTYPE DHT11
+#define dht_dpin D1
+DHT dht(dht_dpin, DHTTYPE);
+//--------------------------------------------------
+//dweet
+#include <dweetESP8266.h>
+#define THIG_NAME1 "test1" //main program
+#define THIG_NAME2 "test2" //relay
+const char* ssid = "Sentry";
+const char* password = "kaung123";
+dweet DweetClient;
+//----------------------------------------------------
+//led
+int GREENPIN = D4;
+int REDPIN = D7;
+int BLUEPIN = D8;
+//-------------------------------------------------------
+char *key0 = "CO2";
+char *key1 = "Humidity";
+char *key2 = "Temperature";
+char *key3 = "Temp";
+char *key5 = "Distance";
+char *key10 = "AC";
+char *key11 = "HEATER";
+char *key12 = "FAN";
+char *key13 = "BUZZER";
+char val0[16];
+char val1[16];
+char val2[16];
+char val3[16];
+char val5[16];
+char val10[16];
+char val11[16];
+char val12[16];
+char val13[16];
+//------------------------------------------------------
+void setup() {
+// Initialize serial communication at 9600 bits per second
+pinMode(REDPIN, OUTPUT);
+pinMode(BLUEPIN, OUTPUT);
+pinMode(GREENPIN, OUTPUT);
+sensors.begin(); //temperature sensor
+dht.begin(); //humidity
+// Serial.println("Starting all sensors...");
+Serial.begin(9600);
+delay(10);
+Serial.println();
+Serial.println();
+Serial.print("Connecting to ");
+Serial.println(ssid);
+WiFi.begin(ssid, password);
+while (WiFi.status() != WL_CONNECTED) {
+  delay(500);
+  Serial.print(".");
+}
+Serial.println("");
+Serial.println("Wifi connected");
+Serial.println("IP address: ");
+Serial.println(WiFi.localIP());
+}
+
+//---------------------------------------------------------
+void loop()
+{
+float co2_a = analogRead(CO2_pin);
+float humidity_b = dht.readHumidity();
+float h = humidity_b;
+float temperature_c = dht.readTemperature();
+float t = temperature_c;
+sensors.requestTemperatures();
+float temp_d = sensors.getTempCByIndex(0);
+unsigned int uS = sonar.ping();
+float sonar_e = uS / US_ROUNDTRIP_CM;
+//------------------------------------------------------------- 
+// The addition of Ultrasound condition
+boolean buzzer13=false; //relay
+if (0<sonar_e<=50){
+Serial.println("Person detected");
+  if (co2_a>60){
+    Serial.println("CO2 level high");
+    buzzer13=true;
+  }
+  else { ("CO2 level normal");
+  }
+delay(3000);
+//----------------------------------------------------------
+String co2 = String (co2_a,2);
+co2.toCharArray(val0,16);
+Serial.println(val0);
+DweetClient.add(key0, val0);
+//---------------------------------------------------------
+String humidity = String (humidity_b,2);
+humidity.toCharArray(val1,16);
+Serial.println(val1);
+DweetClient.add(key1, val1);
+//----------------------------------------------------------
+String temperature = String (temperature_c,2);
+temperature.toCharArray(val2,16);
+Serial.println(val2);
+DweetClient.add(key2, val2);
+//------------------------------------------------------------
+String temp = String (temp_d,2);
+temp.toCharArray(val3,16);
+Serial.println(val3);
+DweetClient.add(key3, val3);
+//-------------------------------------------------------------
+String sonar = String (sonar_e,2);
+sonar.toCharArray(val5,16);
+Serial.println(val5);
+DweetClient.add(key5, val5);
+//------------------------------------------------------------
+DweetClient.sendAll(THIG_NAME1);
+checkTemperature(t, h);
+//---------------------------------------------------------
+String buzzer = String (buzzer13,2);
+buzzer.toCharArray(val13,16);
+Serial.println(val13);
+DweetClient.add(key13, val13);
+DweetClient.sendAll(THIG_NAME2);
+delay(5000);
+}
+else {
+  Serial.println(sonar_e);
+  Serial.println("The System is not Working");
+  delay(3000);
+}
+}
+//-------------------------------------------------------------
+
+void checkTemperature(float t, float h)
+{
+  //------------------------------------------------------
+boolean ac10=false; //relay
+boolean heater11=false; //relay
+boolean fan12=false; //relay
+  if (t > 27 && h > 60) 
+  {
+    Serial.println("AC + FAN");
+    ac10=true;
+    fan12=true;
+    analogWrite(REDPIN, 0);
+    analogWrite(GREENPIN, 0);
+    analogWrite(BLUEPIN, 255);
+  }
+  else if (t < 18 && h < 40) 
+  {
+    Serial.println("HEATER");
+    heater11=true;
+    analogWrite(REDPIN, 255);
+    analogWrite(GREENPIN, 0);
+    analogWrite(BLUEPIN, 0);
+  }
+  else if (t > 27 && h < 40) 
+  {
+    Serial.println("AC");
+    ac10=true;
+    analogWrite(REDPIN, 0);
+    analogWrite(GREENPIN, 0);
+    analogWrite(BLUEPIN, 255);
+  }
+  else if (t < 18 && h > 60) 
+  {
+    Serial.println("Heater + Fan");
+    heater11=true;
+    fan12=true;
+    analogWrite(REDPIN, 255);
+    analogWrite(GREENPIN, 0);
+    analogWrite(BLUEPIN, 0);
+  }
+  else if (t>26)
+  {
+    Serial.println("AC");
+    ac10=true;
+    analogWrite(REDPIN, 0);
+    analogWrite(GREENPIN, 0);
+    analogWrite(BLUEPIN, 255);
+  }
+  else if (t<18)
+  {
+    Serial.println("Heater");
+    heater11=true;
+    analogWrite(REDPIN, 255);
+    analogWrite(GREENPIN, 0);
+    analogWrite(BLUEPIN, 0);
+  }
+  else if (t >= 18 && t <= 26 && h >= 40 && h <= 60)
+  {
+    Serial.println("Conditions are Optimal");
+    analogWrite(REDPIN, 0);
+    analogWrite(GREENPIN, 255);
+    analogWrite(BLUEPIN,0);
+  }
+//----------------------------------------------------
+String ac = String (ac10,2);
+ac.toCharArray(val10,16);
+Serial.println(val10);
+DweetClient.add(key10, val10);
+//--------------------------------------------------------
+String heater = String (heater11,2);
+heater.toCharArray(val11,16);
+Serial.println(val11);
+DweetClient.add(key11, val11);
+//-------------------------------------------------------
+String fan = String (fan12,2);
+fan.toCharArray(val12,16);
+Serial.println(val12);
+DweetClient.add(key12, val12);
+//------------------------------------------------
+}
