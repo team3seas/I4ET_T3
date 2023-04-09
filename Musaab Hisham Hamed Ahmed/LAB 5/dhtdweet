@@ -1,0 +1,61 @@
+#include <dweetESP8266.h>
+
+
+#define THIG_NAME "task1"
+#include "DHT.h"
+#define DHTTYPE DHT11
+
+#define dht_dpin D1
+DHT dht(dht_dpin, DHTTYPE);
+const char* ssid = "MIWIFI_GXFE";
+const char* password = "0984FBH32W";
+
+dweet DweetClient;
+int i = 20;
+float f = 30.1;
+char *key = "Humidity";
+char *key1 = "Temperature";
+
+void setup() {
+  // put your setup code here, to run once:
+dht.begin();
+Serial .begin(115200);
+delay(10);
+Serial.println();
+Serial.println();
+Serial.print("Connecting to ");
+Serial.println(ssid);
+WiFi.begin(ssid, password);
+while (WiFi.status() != WL_CONNECTED){
+  delay(500);
+  Serial.print(".");
+
+}
+Serial.println("");
+Serial.println("Wifi connected");
+Serial.println("IP address: ");
+Serial.println(WiFi.localIP());
+}
+char val[16];
+char val1[16];
+void loop() {
+  // put your main code here, to run repeatedly:
+float h = dht.readHumidity();
+float t = dht.readTemperature();
+// itoa(i, t, 10);
+// // Serial.println(val);
+// DweetClient.add(key, t);
+// DweetClient.sendAll(THIG_NAME);
+// i++;
+String hum = String (h,2);
+hum.toCharArray(val,16);
+Serial.println(val);
+DweetClient.add(key, val);
+String temp = String (t,2);
+temp.toCharArray(val1,16);
+Serial.println(val1);
+DweetClient.add(key1, val1);
+DweetClient.sendAll(THIG_NAME);
+delay(100);
+// Serial.println(key);
+}
