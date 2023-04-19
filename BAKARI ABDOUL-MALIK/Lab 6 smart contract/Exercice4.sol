@@ -5,7 +5,7 @@ string name;
  uint id;
  
 }
-contract constants 
+contract factory 
 {
 Product tanker = Product("Tanker", 1255);
  
