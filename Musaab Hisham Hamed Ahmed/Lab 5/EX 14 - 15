@@ -13,8 +13,8 @@ contract Factory {
 
     mapping (uint => address) public productToOwner;
     mapping (address => uint) ownerProductCount;
-    mapping (uint => uint) public age; // new mapping for user ages
-
+    mapping (uint => uint) public age; 
+    
     event NewProduct(uint indexed ArrayProductId, string name, uint id);
 
     modifier olderThan(uint _age, uint _userId) {
