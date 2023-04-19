@@ -6,7 +6,7 @@ struct Product
     uint id;
     // Add other properties of the Product struct here
 }
-contract PP {
+contract factory {
     
 
 Product[] public products;
