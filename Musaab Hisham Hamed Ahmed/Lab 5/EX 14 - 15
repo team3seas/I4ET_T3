@@ -1,4 +1,4 @@
-pragma solidity >=0.5.0 <0.8.0;
+pragma solidity >=0.8.0;
 
 contract Factory {
     uint idDigits = 16;
@@ -29,7 +29,8 @@ contract Factory {
 
     function _createProduct(string memory _name, uint _id) private {
         Product memory newProduct = Product(_name, _id);
-        uint productId = products.push(newProduct) - 1;
+        uint productId = products.length;
+        products.push(newProduct);
         productToOwner[productId] = msg.sender;
         ownerProductCount[msg.sender]++;
         emit NewProduct(productId, _name, _id);
@@ -53,6 +54,5 @@ contract Factory {
     }
 
     function validationUsers(uint _userId) public view olderThan(18, _userId) {
-        // do nothing here, just need to have the olderThan modifier check the user's age
     }
 }
