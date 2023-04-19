@@ -7,7 +7,7 @@ struct Product {
 }
 
 
-contract constants 
+contract factory 
 {
  Product[] public products;  
 }
