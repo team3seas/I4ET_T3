@@ -1,0 +1,13 @@
+pragma solidity ^0.8.0;
+
+contract User { //exercise 14
+    mapping(uint => uint) public age;
+
+    modifier olderThan(uint _age, uint _userId) {
+        require(age[_userId] >= _age, "User is not old enough");
+        _;
+    }
+
+    function validationUsers(uint _userId) public view olderThan(18, _userId) {
+    }
+}
