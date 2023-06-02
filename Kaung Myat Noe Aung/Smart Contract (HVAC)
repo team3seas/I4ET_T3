@@ -84,4 +84,3 @@ contract HVAC_maintenance {
         return AMOUNTS / 1 ether;
     }
 }
-
