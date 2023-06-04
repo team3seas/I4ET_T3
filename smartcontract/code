@@ -1,0 +1,86 @@
+pragma solidity ^0.8.0;
+
+contract HVAC_maintenance {
+    uint8 private temperature;
+    uint8 private steps;
+    uint256 private acHours;
+    uint256 private heaterHours;
+    uint256 private fanHours;
+
+    // Sample addresses for maintenance services
+    address private acMaintenanceAddress = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
+    address private heaterMaintenanceAddress = 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db;
+    address private fanMaintenanceAddress = 0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB;
+
+    // Address of the contract OWNER
+    address payable public OWNER = payable(msg.sender);
+    // Address of the REQUESTER
+    address payable public REQUESTER;
+    // AMOUNTS of ether to transfer in Wei
+    uint private AMOUNTS;
+
+    function Set_TEMP(uint8 _temperature) public {
+        require(_temperature >= 0 && _temperature <= 30, "Temperature must be between 0 and 30");
+        steps = 0;
+        if (_temperature < 15) {
+            steps = 15 - _temperature;
+            heaterHours += steps;
+        } else if (_temperature > 15) {
+            steps = _temperature - 15;
+            acHours += steps;
+        }
+        fanHours += steps;
+
+        // Trigger the 2nd contract if running hour >= 100
+        if (acHours >= 100) {
+            REQUESTER = payable(acMaintenanceAddress);
+            AMOUNTS = 1 ether;
+        } else if (heaterHours >= 100) {
+            REQUESTER = payable(heaterMaintenanceAddress);
+            AMOUNTS = 2 ether;
+        } else if (fanHours >= 200) {
+            REQUESTER = payable(fanMaintenanceAddress);
+            AMOUNTS = 3 ether;
+        }
+    }
+
+    function Get_HOURS() public view returns (uint256 AC_RH, uint256 Heater_RH, uint256 Fan_RH) {
+        return (acHours, heaterHours, fanHours);
+    }
+
+    function APPROVE() public {
+        require(msg.sender == OWNER, "Only REQUESTER can APPROVE");
+        require(AMOUNTS > 0, "There is nothing to APPROVE");
+        address payable thisContract = payable(address(this));
+        REQUESTER.transfer(AMOUNTS);
+        if (REQUESTER == acMaintenanceAddress) {
+            acHours = 0;
+        } else if (REQUESTER == heaterMaintenanceAddress) {
+            heaterHours = 0;
+        } else if (REQUESTER == fanMaintenanceAddress) {
+            fanHours = 0;
+        }
+        REQUESTER = payable(address(0));
+        AMOUNTS = 0;
+    }
+
+    function TERMINATE() public {
+        require(msg.sender == REQUESTER || msg.sender == OWNER, "Only REQUESTER or OWNER can TERMINATE");
+        selfdestruct(OWNER);
+    }
+
+    function WITHDRAW() public {
+        require(msg.sender == OWNER, "Only OWNER can WITHDRAW");
+        uint balance = address(this).balance;
+        OWNER.transfer(balance);
+    }
+
+    function DEPOSIT() public payable {
+        // Require a non-zero AMOUNTS to be deposited
+        require(msg.value > 0, "DEPOSIT AMOUNTS must be greater than zero");
+        require(msg.sender == OWNER, "Only OWNER can DEPOSIT");
+    }
+    function AMOUNT() public view returns (uint) {
+        return AMOUNTS / 1 ether;
+    }
+}
